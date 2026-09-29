@@ -1,0 +1,27 @@
+name: Update dashboard
+on:
+  schedule:
+    - cron: '30 5 * * *'
+    - cron: '30 19 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pandas numpy requests
+      - run: python update.py
+        env:
+          ICU_API_KEY: ${{ secrets.ICU_API_KEY }}
+          ICU_ATHLETE_ID: ${{ secrets.ICU_ATHLETE_ID }}
+          TZ: Europe/London
+      - run: |
+          git config user.name "dashboard-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add docs
+          if ! git diff --cached --quiet; then git commit -m "Update dashboard"; git push; fi
