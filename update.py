@@ -8,7 +8,7 @@ def get(p, **q):
 acts = get('/activities', oldest=str((today - pd.Timedelta(days=400)).date()), newest=str(today.date()))
 print(len(acts), 'activities. Fields available:', sorted(acts[0])[:80] if acts else None)  # names only, no values
 g = lambda a, *k: next((a[x] for x in k if a.get(x) is not None), None)
-df = pd.DataFrame([dict(d=pd.to_datetime(g(a, 'start_date_local')), type=a.get('type'), secs=g(a, 'moving_time') or 0,
+df = pd.DataFrame([dict(d=pd.to_datetime(g(a, 'start_date_local')), type=a.get('type'), secs=g(a, 'moving_time') or 0, dist=(g(a, 'distance') or 0) / 1000,
     load=g(a, 'icu_training_load') or 0, nw=g(a, 'icu_weighted_avg_watts'), iff=g(a, 'icu_intensity'),
     ftp=g(a, 'icu_ftp'), wt=g(a, 'icu_weight')) for a in acts]).sort_values('d').reset_index(drop=True)
 df['ftp'] = df.ftp.astype(float).ffill().bfill(); df['wt'] = df.wt.astype(float).ffill().bfill()
@@ -27,6 +27,7 @@ ctl = daily.ewm(alpha=1/42, adjust=False).mean(); atl = daily.ewm(alpha=1/7, adj
 fit = [[str(i.date()), round(ctl[i], 1), round(atl[i], 1)] for i in daily.index if i >= today - pd.Timedelta(days=182)]
 cyc = df[df.type.isin(['VirtualRide', 'Ride'])].copy(); s = cyc.set_index('d')
 wkh = (s['secs'].resample('W').sum() / 3600).tail(26); wkl = df.set_index('d')['load'].resample('W').sum().tail(26)
+wkt = [[str(i.date()), round(float(k), 1), round(float(h) / 3600, 2)] for i, k, h in zip(s['secs'].resample('W').sum().tail(9).index, s['dist'].resample('W').sum().tail(9).values, s['secs'].resample('W').sum().tail(9).values)]
 f = df.set_index('d')[['ftp', 'wt']].resample('W').last().ffill().bfill().tail(52)
 w8 = df[df.d >= today - pd.Timedelta(days=56)].dropna(subset=['wt'])
 slope = float(np.polyfit((w8.d - w8.d.iloc[0]).dt.days, w8.wt, 1)[0] * 7) if len(w8) > 3 else 0.0
@@ -49,7 +50,7 @@ data = dict(fit=fit, wk=[[str(i.date()), round(float(a), 1), round(float(b))] fo
     ftpw=[[str(i.date()), float(a), float(b)] for i, (a, b) in f.iterrows()], lg=[[i.strftime('%b'), int(v)] for i, v in lg.items()],
     split=sp, slope=round(slope, 2), ftp=ftp, wt=wt, ctl=int(round(ctl.iloc[-1])), ctl4=int(round(ctl.iloc[-29])), tsb=int(round(tsb)),
     hrs4=round(float(wkh.tail(4).mean()), 1), longest=round(float(cyc[cyc.d >= today - pd.Timedelta(days=90)].secs.max()) / 3600, 1),
-    asof=today.strftime('%d %b %Y'), sug=dict(title=t, detail=dt, why=why))
+    asof=today.strftime('%d %b %Y'), wkt=wkt, dow=int(today.dayofweek) + 1, sug=dict(title=t, detail=dt, why=why))
 os.makedirs('docs', exist_ok=True)
 open('docs/index.html', 'w').write(open('template.html').read().replace('__DATA__', json.dumps(data)))
 print('Built docs/index.html. Suggestion:', t)
