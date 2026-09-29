@@ -1,7 +1,12 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Ride Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">const TK=300,TH=9,wk=D.wkt,cur=wk[wk.length-1],past=wk.slice(0,-1),ex=D.dow/7;
+const ic=(v,t)=>v>=t?'✅':v>=t*ex*.9?'🟢':v>=t*ex*.7?'🟠':'🔴';
+const blk=(n,v,t,u,i)=>{const d=t-v;return '<div style="margin-top:14px"><span class="ic">'+ic(v,t)+'</span> <b>'+n+'</b>: '+v.toFixed(i)+' of '+t+' '+u+' <span class="mute">('+(d>0?d.toFixed(i)+' '+u+' to go':(-d).toFixed(i)+' '+u+' over')+')</span><div class="prog"><i style="width:'+Math.min(100,v/t*100)+'%"></i><b style="left:'+(ex*100)+'%"></b></div></div>'};
+const hist=(k,t,u,i)=>'<div class="hist">'+past.map(r=>'<div><span class="ic">'+(r[k]>=t?'✅':'❌')+'</span><br>'+r[k].toFixed(i)+'<br><span class="mute">'+r[0].slice(5)+'</span></div>').join('')+'</div>';
+$('wt').innerHTML=blk('Distance',cur[1],TK,'km',0)+blk('Ride time',cur[2],TH,'h',1)+'<p class="mute" style="margin-top:16px">Last 8 weeks, distance (km, week ending):</p>'+hist(1,TK,'km',0)+'<p class="mute">Last 8 weeks, ride time (h):</p>'+hist(2,TH,'h',1);
+</script>
 <style>
 :root{--bg:#EEF2F5;--card:#fff;--ink:#14232E;--mute:#5B6B78;--line:#D5DDE3;--pw:#1F5FBF;--fat:#E08A00;--wt:#B23A48;--ok:#2E8B57;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101A22;--card:#18262F;--ink:#E7EEF3;--mute:#93A4B1;--line:#2A3B47;--pw:#6FA3F0;--fat:#F0A93A;--wt:#E5717F;--ok:#5FC08A}}
@@ -21,11 +26,13 @@ h2{font-size:22px;margin-bottom:8px}.mute{color:var(--mute);font-size:14px}
 .stat b{font:700 34px "Barlow Condensed",sans-serif;display:block}
 .cv{position:relative;height:240px;width:100%}
 .bar{display:flex;height:14px;border-radius:4px;overflow:hidden;margin:8px 0}
+.prog{position:relative;height:12px;background:var(--line);border-radius:6px;margin:10px 0 4px}.prog i{display:block;height:100%;background:var(--pw);border-radius:6px}.prog b{position:absolute;top:-4px;width:2px;height:20px;background:var(--ink)}.hist{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}.hist div{text-align:center;font-size:13px;min-width:44px}.ic{font-size:26px;line-height:1}
 </style></head><body><main>
 <h1>Ride dashboard</h1><div class="mute" id="asof"></div>
 <section class="card hero"><div class="row"><div class="big" id="wkg"></div><div><b>W/kg now</b><div class="mute" id="wkgsub"></div></div></div>
 <div class="track"><div class="fill" id="fill"></div><div class="mk" id="mNow"></div><div class="mk" id="mXmas"></div><div class="mk" id="mLong"></div></div></section>
 <section class="card"><div class="mute">Suggested ride</div><h2 id="sugT"></h2><p id="sugD"></p><div class="mute" id="sugW"></div></section>
+<section class="card"><h2>Weekly targets</h2><div class="mute">Week runs Monday to Sunday. The black marker shows where you should be by today.</div><div id="wt"></div></section>
 <div class="grid" id="tiles"></div>
 <section class="card"><h2>Targets</h2><div id="targets"></div></section>
 <section class="card"><h2>Fitness, fatigue and form</h2><div class="mute">Fitness (42-day load) should climb steadily; fatigue (7-day) swings around it.</div><div class="cv"><canvas id="c1"></canvas></div></section>
@@ -54,4 +61,9 @@ const o3=JSON.parse(JSON.stringify(L));o3.scales.y1={position:'right',ticks:{col
 new Chart($('c3'),{type:'line',data:{labels:D.ftpw.map(r=>r[0].slice(0,7)),datasets:[{label:'FTP (W)',data:D.ftpw.map(r=>r[1]),borderColor:cs('--pw'),stepped:true,pointRadius:0},{label:'Weight (kg)',data:D.ftpw.map(r=>r[2]),borderColor:cs('--wt'),yAxisID:'y1',pointRadius:0,tension:.3}]},options:o3});
 const s=D.split;$('endu').innerHTML='<p>Time in each zone, last 8 weeks (easy / tempo / hard):</p><div class="bar"><div style="width:'+s[0]+'%;background:'+cs('--ok')+'"></div><div style="width:'+s[1]+'%;background:'+cs('--fat')+'"></div><div style="width:'+s[2]+'%;background:'+cs('--wt')+'"></div></div><p class="mute">'+s[0]+'% easy, '+s[1]+'% tempo, '+s[2]+'% hard. Long rides (90 min+) per month below.</p>';
 new Chart($('c4'),{type:'bar',data:{labels:D.lg.map(r=>r[0]),datasets:[{label:'Rides of 90 min+',data:D.lg.map(r=>r[1]),backgroundColor:cs('--ok')}]},options:L});
+const TK=300,TH=9,wk=D.wkt,cur=wk[wk.length-1],past=wk.slice(0,-1),ex=D.dow/7;
+const ic=(v,t)=>v>=t?'✅':v>=t*ex*.9?'🟢':v>=t*ex*.7?'🟠':'🔴';
+const blk=(n,v,t,u,i)=>{const d=t-v;return '<div style="margin-top:14px"><span class="ic">'+ic(v,t)+'</span> <b>'+n+'</b>: '+v.toFixed(i)+' of '+t+' '+u+' <span class="mute">('+(d>0?d.toFixed(i)+' '+u+' to go':(-d).toFixed(i)+' '+u+' over')+')</span><div class="prog"><i style="width:'+Math.min(100,v/t*100)+'%"></i><b style="left:'+(ex*100)+'%"></b></div></div>'};
+const hist=(k,t,u,i)=>'<div class="hist">'+past.map(r=>'<div><span class="ic">'+(r[k]>=t?'✅':'❌')+'</span><br>'+r[k].toFixed(i)+'<br><span class="mute">'+r[0].slice(5)+'</span></div>').join('')+'</div>';
+$('wt').innerHTML=blk('Distance',cur[1],TK,'km',0)+blk('Ride time',cur[2],TH,'h',1)+'<p class="mute" style="margin-top:16px">Last 8 weeks, distance (km, week ending):</p>'+hist(1,TK,'km',0)+'<p class="mute">Last 8 weeks, ride time (h):</p>'+hist(2,TH,'h',1);
 </script></body></html>
