@@ -31,7 +31,7 @@ h2{font-size:22px;margin-bottom:8px}.mute{color:var(--mute);font-size:14px}
 <h1>Ride dashboard</h1><div class="mute" id="asof"></div>
 <section class="card hero"><div class="row"><div class="big" id="wkg"></div><div><b>W/kg now</b><div class="mute" id="wkgsub"></div></div></div>
 <div class="track"><div class="fill" id="fill"></div><div class="mk" id="mNow"></div><div class="mk" id="mXmas"></div><div class="mk" id="mLong"></div></div></section>
-<section class="card"><div class="mute">Suggested ride</div><h2 id="sugT"></h2><p id="sugD"></p><div class="mute" id="sugW"></div></section>
+<section class="card"><div class="mute">Suggested ride</div><h2 id="sugT"></h2><p id="sugD"></p><div class="mute" id="sugW"></div><p><button id="zwo" style="font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--pw);color:#fff;cursor:pointer">Download .zwo for Zwift</button></p></section>
 <section class="card"><h2>Weekly targets</h2><div class="mute">Week runs Monday to Sunday. The black marker shows where you should be by today.</div><div id="wt"></div></section>
 <div class="grid" id="tiles"></div>
 <section class="card"><h2>Targets</h2><div id="targets"></div></section>
@@ -66,4 +66,5 @@ const ic=(v,t)=>v>=t?'✅':v>=t*ex*.9?'🟢':v>=t*ex*.7?'🟠':'🔴';
 const blk=(n,v,t,u,i)=>{const d=t-v;return '<div style="margin-top:14px"><span class="ic">'+ic(v,t)+'</span> <b>'+n+'</b>: '+v.toFixed(i)+' of '+t+' '+u+' <span class="mute">('+(d>0?d.toFixed(i)+' '+u+' to go':(-d).toFixed(i)+' '+u+' over')+')</span><div class="prog"><i style="width:'+Math.min(100,v/t*100)+'%"></i><b style="left:'+(ex*100)+'%"></b></div></div>'};
 const hist=(k,t,u,i)=>'<div class="hist">'+past.map(r=>'<div><span class="ic">'+(r[k]>=t?'✅':'❌')+'</span><br>'+r[k].toFixed(i)+'<br><span class="mute">'+r[0].slice(5)+'</span></div>').join('')+'</div>';
 $('wt').innerHTML=blk('Distance',cur[1],TK,'km',0)+blk('Ride time',cur[2],TH,'h',1)+'<p class="mute" style="margin-top:16px">Last 8 weeks, distance (km, week ending):</p>'+hist(1,TK,'km',0)+'<p class="mute">Last 8 weeks, ride time (h):</p>'+hist(2,TH,'h',1);
+$('zwo').onclick=()=>{const z=D.sug,n=z.title.replace(/[^A-Za-z0-9 ]/g,'');const x='<?xml version="1.0" encoding="UTF-8"?><workout_file><author>Ride dashboard</author><name>'+n+' '+D.asof+'</name><description>'+z.detail+'</description><sportType>bike</sportType><tags/><workout>'+z.zwo.map(b=>b[0]=='IntervalsT'?'<IntervalsT Repeat="'+b[1]+'" OnDuration="'+b[2]+'" OffDuration="'+b[3]+'" OnPower="'+b[4]+'" OffPower="'+b[5]+'"/>':b[0]=='SteadyState'?'<SteadyState Duration="'+b[1]+'" Power="'+b[2]+'"/>':'<'+b[0]+' Duration="'+b[1]+'" PowerLow="'+b[2]+'" PowerHigh="'+b[3]+'"/>').join('')+'</workout></workout_file>';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([x],{type:'application/xml'}));a.download=(n+' '+D.asof).replace(/ /g,'-')+'.zwo';a.click()};
 </script></body></html>

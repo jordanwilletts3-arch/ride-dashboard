@@ -45,12 +45,17 @@ elif h48 == 1 or tsb < -10 or h7 >= 4:
 elif tsb > 10: t, dt = 'VO2 max session', f'5 x 4 min at {P(1.12, 1.2)}, 4 min easy between, with a 15 min warm-up and cool-down.'
 elif h7 >= 3: t, dt = 'Sweet spot', f'3 x 15 min at {P(.88, .93)}, 5 min easy between.'
 else: t, dt = 'Threshold session', f'3 x 12 min at {P(.95, 1.0)}, 5 min easy between.'
+W, C = ['Warmup', 600, .4, .7], ['Cooldown', 300, .6, .4]
+WU, CD = ['Warmup', 900, .4, .75], ['Cooldown', 600, .6, .4]
+Z = {'Rest day or easy spin': [['SteadyState', 2700, .55]], 'Long steady ride': [W, ['SteadyState', 6600, .65], C],
+    'Endurance ride': [W, ['SteadyState', 3600, .65], C], 'VO2 max session': [WU, ['IntervalsT', 5, 240, 240, 1.16, .5], CD],
+    'Sweet spot': [WU, ['IntervalsT', 3, 900, 300, .9, .5], CD], 'Threshold session': [WU, ['IntervalsT', 3, 720, 300, .975, .5], CD]}
 why = f'Form {tsb:+.0f}. {h48} hard ride(s) in the last 2 days and {h7} in the last 7.'
 data = dict(fit=fit, wk=[[str(i.date()), round(float(a), 1), round(float(b))] for i, a, b in zip(wkh.index, wkh.values, wkl.values)],
     ftpw=[[str(i.date()), float(a), float(b)] for i, (a, b) in f.iterrows()], lg=[[i.strftime('%b'), int(v)] for i, v in lg.items()],
     split=sp, slope=round(slope, 2), ftp=ftp, wt=wt, ctl=int(round(ctl.iloc[-1])), ctl4=int(round(ctl.iloc[-29])), tsb=int(round(tsb)),
     hrs4=round(float(wkh.tail(4).mean()), 1), longest=round(float(cyc[cyc.d >= today - pd.Timedelta(days=90)].secs.max()) / 3600, 1),
-    asof=today.strftime('%d %b %Y'), wkt=wkt, dow=int(today.dayofweek) + 1, sug=dict(title=t, detail=dt, why=why))
+    asof=today.strftime('%d %b %Y'), wkt=wkt, dow=int(today.dayofweek) + 1, sug=dict(title=t, detail=dt, why=why, zwo=Z[t]))
 os.makedirs('docs', exist_ok=True)
 open('docs/index.html', 'w').write(open('template.html').read().replace('__DATA__', json.dumps(data)))
 print('Built docs/index.html. Suggestion:', t)
